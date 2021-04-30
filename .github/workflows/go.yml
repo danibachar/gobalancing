@@ -1,0 +1,43 @@
+name: Go
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        version: [ '1.13', '1.14', '1.15' ]
+    name: Go ${{ matrix.version }}
+    steps:
+    - name: Check out the repository
+      uses: actions/checkout@v2
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: ${{ matrix.version }}
+    - run: go get -u golang.org/x/lint/golint
+    - run: go get -u github.com/client9/misspell/cmd/misspell
+    - name: Install testing dependencies
+      run: go get -v ./...
+    - name: Make sure code matches go.mod
+      run: go mod tidy
+    - name: Reports suspicious constructs
+      run: go vet
+    - name: Linter
+      run: golint
+    - name: Check for spelling mistakes
+      run: misspell -v .
+    # - name: Check Go formating
+    #   run: gofmt -s .
+    - name: Test
+      run: go test -v -race -covermode=atomic -coverprofile=coverage.txt 
+    - name: Upload coverage to Codecov
+      env: 
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}  
+      run: bash <(curl -s https://codecov.io/bash)
