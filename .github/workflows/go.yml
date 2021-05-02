@@ -10,20 +10,25 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-      strategy:
-        matrix:
-          version: [ '1.13', '1.14', '1.15' ]
+    strategy:
+      matrix:
+        version: [ '1.13', '1.14', '1.15' ]
     name: Go ${{ matrix.version }}
-    
     steps:
+    - name: Check out the repository
+      uses: actions/checkout@v2
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
         go-version: ${{ matrix.version }}
-    
-    - uses: actions/checkout@v2
-    - run: go mod tidy && git diff --exit-code go.mod go.sum
+    - name: Install testing dependencies
+      run: go get -v ./...
+    - run: go mod tidy
     - run: go vet
-    
     - name: Test
-      run: go run ./ginkgo -r --randomizeAllSpecs --randomizeSuites --race --trace
+      # run: go run ginkgo -r --randomizeAllSpecs --randomizeSuites --race --trace -cover
+      run: go test -v -coverprofile=coverage.txt -race
+    - name: Upload coverage to Codecov
+      env: 
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}  
+      run: bash <(curl -s https://codecov.io/bash)
