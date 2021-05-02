@@ -1,0 +1,29 @@
+name: Go
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+      strategy:
+        matrix:
+          version: [ '1.13', '1.14', '1.15' ]
+    name: Go ${{ matrix.version }}
+    
+    steps:
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: ${{ matrix.version }}
+    
+    - uses: actions/checkout@v2
+    - run: go mod tidy && git diff --exit-code go.mod go.sum
+    - run: go vet
+    
+    - name: Test
+      run: go run ./ginkgo -r --randomizeAllSpecs --randomizeSuites --race --trace
