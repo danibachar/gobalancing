@@ -11,7 +11,7 @@ type SmoothWeightedRRThreadSafe struct {
 }
 
 // NewSWRRhreadSafe - NewSWRRhreadSafe - Load Balancer constructor
-func NewSWRRhreadSafe() *SmoothWeightedRRThreadSafe {
+func NewSWRRThreadSafe() *SmoothWeightedRRThreadSafe {
 	return &SmoothWeightedRRThreadSafe{
 		lb: NewSWRR(),
 	}
