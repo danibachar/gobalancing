@@ -6,6 +6,6 @@
 
 Lightweight Load Balancing library in GO
 
-- This Go package is an improved port of `https://github.com/smallnest/weighted`
+- This Go package is an improved thread safe port of `https://github.com/smallnest/weighted`
 
 - Documentation available here - `https://pkg.go.dev/github.com/danibachar/gobalancing`

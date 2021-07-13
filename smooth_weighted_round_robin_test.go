@@ -20,6 +20,7 @@ var _ = Describe("Smooth Weighted RR Public API Test", func() {
 	// Global Vars
 	var servers []server
 	var smoothTestingServers []server
+	var roundRobinServers []server
 	var lb *SmoothWeightedRR
 
 	// Helpers
@@ -40,6 +41,12 @@ var _ = Describe("Smooth Weighted RR Public API Test", func() {
 			{name: "server1", weight: randFloat()},
 			{name: "server2", weight: randFloat()},
 			{name: "server3", weight: randFloat()},
+		}
+
+		roundRobinServers = []server{
+			{name: "server1", weight: math.SmallestNonzeroFloat64},
+			{name: "server2", weight: math.SmallestNonzeroFloat64},
+			{name: "server3", weight: math.SmallestNonzeroFloat64},
 		}
 
 		rand.Shuffle(len(servers), func(i, j int) { servers[i], servers[j] = servers[j], servers[i] })
@@ -189,6 +196,22 @@ var _ = Describe("Smooth Weighted RR Public API Test", func() {
 
 			serversMap := lb.All()
 			Expect(serversMap[server.name]).To(Equal(newWeight))
+		})
+	})
+
+
+	When("load balancing with all weights equal 0 - i.e Round Robin", func() {
+		It("should balance equaly", func() {
+			for _, s := range roundRobinServers {
+				err := lb.Add(s.name, s.weight)
+				Expect(err).To(BeNil())
+			}
+
+			for i := 0; i < 100 ;i++ {
+				for _, s := range roundRobinServers {
+					Expect(lb.Next().(string)).To(Equal(s.name))
+				}
+			}
 		})
 	})
 

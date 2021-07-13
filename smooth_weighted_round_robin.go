@@ -2,7 +2,6 @@ package gobalancing
 
 import (
 	"errors"
-	"sync"
 )
 
 type weightedItem struct {
@@ -16,7 +15,6 @@ type weightedItem struct {
 type SmoothWeightedRR struct {
 	items    []*weightedItem
 	itemsMap map[interface{}](*weightedItem)
-	sync.RWMutex
 }
 
 // NewSWRR - SmoothWeightedRR - Load Balancer constructor
@@ -40,9 +38,6 @@ func (lb *SmoothWeightedRR) Update(item interface{}, weight float64) (err error)
 		return errors.New("Does not support negative weigt")
 	}
 
-	lb.Lock()
-	defer lb.Unlock()
-
 	var itemToUpdate = lb.itemsMap[item]
 	if itemToUpdate == nil {
 		return errors.New("No item to update")
@@ -61,9 +56,6 @@ func (lb *SmoothWeightedRR) Add(item interface{}, weight float64) (err error) {
 		return errors.New("Does not support negative weigt")
 	}
 
-	lb.Lock()
-	defer lb.Unlock()
-
 	if lb.itemsMap[item] != nil {
 		return errors.New("Item already in queue")
 	}
@@ -81,8 +73,6 @@ func (lb *SmoothWeightedRR) RemoveAll() {
 
 // Reset - reset load balancing state, like adding all items with their original weights
 func (lb *SmoothWeightedRR) Reset() {
-	lb.Lock()
-	defer lb.Unlock()
 
 	for _, s := range lb.items {
 		s.EffectiveWeight = s.Weight
@@ -92,9 +82,6 @@ func (lb *SmoothWeightedRR) Reset() {
 
 // All - returns a map all items as keys and their weights as values
 func (lb *SmoothWeightedRR) All() map[interface{}]float64 {
-	lb.RLock()
-	defer lb.RUnlock()
-
 	m := make(map[interface{}]float64)
 	for _, i := range lb.items {
 		m[i.Item] = i.Weight
@@ -104,8 +91,6 @@ func (lb *SmoothWeightedRR) All() map[interface{}]float64 {
 
 // Next - fetches next item according to the smooth weighted round robin fashion
 func (lb *SmoothWeightedRR) Next() interface{} {
-	lb.RLock()
-	defer lb.RUnlock()
 
 	i := lb.nextWeightedItem()
 	if i == nil {
